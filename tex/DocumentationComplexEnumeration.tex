@@ -1,0 +1,188 @@
+\documentclass{article}
+\usepackage{amsmath, amssymb}
+
+\begin{document}
+
+\section*{Mathematical Formulation of Intermediate Generation}
+
+Let:
+\begin{itemize}
+    \item \( \mathcal{T}_V \): a finite set of \emph{element types} (e.g., types of vertices or nodes)
+    \item \( \mathcal{T}_E \): a finite set of \emph{edge types} (e.g., bond types or connection types)
+\end{itemize}
+
+Define a graph \( G = (V, E, \tau_V, \tau_E) \) where:
+\begin{itemize}
+    \item \( V \) is a finite set of \emph{vertices} (elements)
+    \item \( E \subseteq \{ \{u, v\} \mid u, v \in V, u \neq v \} \) is a set of \emph{undirected edges} (no loops or multi-edges)
+    \item \( \tau_V: V \to \mathcal{T}_V \) assigns a type to each vertex
+    \item \( \tau_E: E \to \mathcal{T}_E \) assigns a type to each edge
+\end{itemize}
+
+\subsection*{Equivalence of Graphs}
+
+Two graphs \( G_1 = (V_1, E_1, \tau_{V_1}, \tau_{E_1}) \) and \( G_2 = (V_2, E_2, \tau_{V_2}, \tau_{E_2}) \) are \emph{isomorphic} (or equivalent) if there exists a bijection
+\[
+\phi: V_1 \to V_2
+\]
+such that:
+\begin{align*}
+\tau_{V_1}(v) &= \tau_{V_2}(\phi(v)) \quad \text{for all } v \in V_1 \\
+\{u, v\} \in E_1 &\iff \{\phi(u), \phi(v)\} \in E_2 \\
+\tau_{E_1}(\{u, v\}) &= \tau_{E_2}(\{\phi(u), \phi(v)\})
+\end{align*}
+
+This ensures both structure and labeling are preserved under isomorphism.
+
+\subsection*{Subgraph Definition}
+
+A graph \( H = (V_H, E_H, \tau_{V_H}, \tau_{E_H}) \) is a \emph{subgraph} of \( G \) (denoted \( H \subseteq G \)) if:
+\begin{itemize}
+    \item \( V_H \subseteq V \)
+    \item \( E_H \subseteq \{ \{u, v\} \in E \mid u, v \in V_H \} \)
+    \item \( \tau_{V_H} = \tau_V|_{V_H} \), i.e., the restriction of \( \tau_V \) to \( V_H \)
+    \item \( \tau_{E_H} = \tau_E|_{E_H} \)
+\end{itemize}
+
+Trivially, \( G \subseteq G \).
+\section*{Question: How to Get All Non-Trivial Unique Subgraphs of \( G \)?}
+
+Let \( G = (V, E, \tau_V, \tau_E) \). To enumerate all non-trivial (at least one vertex) unique subgraphs up to isomorphism, with the additional constraint that any subgraph of size at least two must be \emph{connected} as a single component (i.e., the subgraph must not be separable into disconnected parts):
+
+\subsection*{Step-by-Step Procedure}
+
+\begin{enumerate}
+    \item \textbf{Enumerate All Vertex Subsets:} \\
+    For every non-empty subset \( V' \subseteq V \), proceed to edge enumeration.
+
+    \item \textbf{Enumerate All Edge Subsets:} \\
+    For each vertex subset \( V' \), consider the induced edge set:
+    \[
+    E' = \{ \{u, v\} \in E \mid u, v \in V' \}
+    \]
+
+    \item \textbf{Filter by Connectivity:} \\
+    Accept the subgraph \( H = (V', E') \) only if:
+    \begin{itemize}
+        \item If \( |V'| = 1 \), the single vertex must have degree at least 1 in the original graph \( G \)
+        \item If \( |V'| \geq 2 \), the induced subgraph \( H \) must be \emph{connected}, meaning there exists a path between any pair of nodes in \( H \)
+    \end{itemize}
+
+    \item \textbf{Construct Labeled Subgraphs:} \\
+    Each valid \( (V', E') \) pair defines a candidate subgraph \( H \) with inherited labeling functions \( \tau_V|_{V'} \) and \( \tau_E|_{E'} \).
+
+    \item \textbf{Canonical Labeling (Isomorphism Reduction):} \\
+    Use a graph isomorphism algorithm that respects vertex and edge types to convert each subgraph into a canonical form.
+
+    \item \textbf{Filter Unique Subgraphs:} \\
+    Maintain a set of canonical representations to eliminate isomorphic duplicates.
+\end{enumerate}
+
+\subsection*{Output}
+
+The set of all non-trivial (i.e., \( |V'| \geq 1 \)) and connected (if \( |V'| \geq 2 \)) unique subgraphs of \( G \), up to isomorphism.
+
+\section*{Problem Motivation and Hashing Approach}
+
+Directly comparing each candidate subgraph via isomorphism testing is computationally expensive, especially as the number of candidate subgraphs grows exponentially with graph size.
+
+To address this, we make use of the \emph{Weisfeiler-Lehman (WL) graph hash} as a surrogate for canonical labeling. This enables us to efficiently test whether two graphs are isomorphic up to node and edge types, without performing pairwise isomorphism tests.
+
+\subsection*{Why Full Isomorphism Checking is Expensive}
+
+Let \( \mathcal{G}_k \) denote the set of all size-\( k \) subgraphs from the input graph \( G \). To identify all unique subgraphs up to isomorphism, a naïve approach would require \( O(|\mathcal{G}_k|^2) \) pairwise isomorphism checks, where each check can be expensive depending on labeling.
+
+\subsection*{Weisfeiler-Lehman Graph Hashing}
+
+The Weisfeiler-Lehman method is a vertex refinement technique used to encode graph structure into compact hash values. It works as follows:
+
+\begin{itemize}
+    \item Initially, each node is labeled with its original label (e.g., node type).
+    \item At each iteration, the label of each node is updated by hashing its current label together with a multiset of its neighbors' labels (along with edge types, if specified).
+    \item This process iteratively refines the labels in a way that captures structural information, producing a final string representation that is invariant under graph isomorphism.
+\end{itemize}
+
+This process yields a graph-invariant fingerprint: if two graphs have different WL hashes, they are guaranteed to be non-isomorphic. If they share the same hash, they are \emph{likely} isomorphic (WL test is not complete for all graphs, but is highly effective in practice, especially for graphs with rich labelings).
+
+\section*{Implementation of Weisfeiler-Lehman Hashing in \texttt{networkx}}
+
+In practice, the Weisfeiler-Lehman (WL) graph hash can be computed efficiently using the \texttt{networkx} library, which provides a built-in function called \texttt{weisfeiler\_lehman\_graph\_hash}.
+
+\subsection*{API Call and Usage}
+
+The function is accessed as follows:
+
+\begin{verbatim}
+from networkx.algorithms.graph_hashing import weisfeiler_lehman_graph_hash
+
+hash_string = weisfeiler_lehman_graph_hash(
+    G, 
+    node_attr="type", 
+    edge_attr="type"
+)
+\end{verbatim}
+
+\textbf{Parameters:}
+\begin{itemize}
+    \item \texttt{G}: the input graph (can be a subgraph)
+    \item \texttt{node\_attr}: name of the node attribute to use in hashing (e.g., \texttt{"type"})
+    \item \texttt{edge\_attr}: name of the edge attribute to use (e.g., \texttt{"type"})
+\end{itemize}
+
+\textbf{Output:} A canonical string that encodes the graph’s topology and labeled structure. Two graphs with the same hash string are treated as equivalent (isomorphic with respect to labels).
+
+\subsection*{Preprocessing and Notes}
+
+\begin{itemize}
+    \item To ensure that node labels do not affect the hash (only structure and types), each subgraph is relabeled to use integer node indices before hashing:
+    \[
+    \texttt{H\_relabel = networkx.convert\_node\_labels\_to\_integers(H)}
+    \]
+    
+    \item To maximize performance, type labels are stored as integers (or strings) rather than complex objects (e.g., Enums).
+    
+    \item The hash values are used to deduplicate subgraphs during enumeration:
+    \[
+    \texttt{if wl\_hash not in seen\_hashes: \quad \ldots}
+    \]
+\end{itemize}
+
+\section*{Complexity Analysis}
+
+The problem of enumerating all non-trivial, fully connected, unique subgraphs of a labeled graph \( G = (V, E, \tau_V, \tau_E) \) involves several computational steps, each with its own complexity considerations.
+
+\subsection*{Subgraph Enumeration}
+
+
+The number of labeled subgraphs is exponential:
+\[
+O(2^{|V|} \cdot 2^{|E|})
+\]
+and each subgraph requires isomorphism checking, so efficient hashing or pruning is critical for tractability on large graphs.
+
+
+\subsection*{Overall Complexity of Weisfeiler-Lehman Hash Computation}
+
+For each valid subgraph \( H \subseteq G \), a WL hash is computed. The runtime for WL hashing is:
+\[
+O(k(|V_H| + |E_H|))
+\]
+where \( k \) is the number of refinement iterations (typically a small constant), and \( V_H \), \( E_H \) are the vertex and edge sets of the subgraph. Since each subgraph is typically small, this step is efficient and can be considered nearly linear per subgraph.
+
+After computing the hash string for each subgraph, we store it in a hash set to check for uniqueness. This provides:
+\[
+O(1)
+\]
+expected time per subgraph for lookup and insertion (amortized), assuming good hash distribution and a suitable hash function (e.g., Weisfeiler-Lehman).
+
+Let \( N \) denote the number of candidate subgraphs generated and tested. The overall complexity is:
+\[
+O(N \cdot (|V_H| + |E_H|)) \quad \text{(WL hash per subgraph)}
+\]
+where \( |V_H| \) and \( |E_H| \) are typically small constants for molecular graphs or motifs.
+
+In the worst case (e.g., for dense graphs with many small motifs), the algorithm remains exponential in \( |V| \), but the combination of pruning (via degree filtering) and hashing makes it tractable for moderate-sized sparse graphs.
+
+
+
+\end{document}
