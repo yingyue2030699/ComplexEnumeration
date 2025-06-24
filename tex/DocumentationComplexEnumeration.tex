@@ -183,6 +183,91 @@ where \( |V_H| \) and \( |E_H| \) are typically small constants for molecular gr
 
 In the worst case (e.g., for dense graphs with many small motifs), the algorithm remains exponential in \( |V| \), but the combination of pruning (via degree filtering) and hashing makes it tractable for moderate-sized sparse graphs.
 
+\section*{Subgraph Models: Induced vs. Edge-Deletion Connected Subgraphs}
+
+Subgraphs can be yielded with varying levels of structural flexibility. In this work, we distinguish between two valid but distinct method of getting subgraph, which differ in the set of allowed edges among selected vertices.
+
+\subsection*{1. Induced Connected Subgraphs}
+
+Let \( G = (V, E, \tau_V, \tau_E) \) be the full input graph.
+
+A subgraph \( H = (V_H, E_H, \tau_V|_{V_H}, \tau_E|_{E_H}) \) is called an \textbf{induced connected subgraph} if:
+\begin{itemize}
+    \item \( V_H \subseteq V \), \( V_H \neq \emptyset \)
+    \item \( E_H = \{ \{u,v\} \in E \mid u,v \in V_H \} \)
+    \item \( H \) is connected
+\end{itemize}
+
+That is, for each subset of nodes \( V_H \), the subgraph includes all edges among those nodes from the original graph. Only those node subsets where the induced graph is connected are retained.
+
+\textbf{Consequence:} This formulation does not allow partial deletion of edges within a node subset. If two nodes in \( V_H \) are connected in \( G \), they must be connected in \( H \).
+
+\subsection*{2. Edge-Deletion Connected Subgraphs}
+
+We now generalize to a more inclusive definition.
+
+A subgraph \( H = (V_H, E_H, \tau_V|_{V_H}, \tau_E|_{E_H}) \) is called an \textbf{edge-deletion connected subgraph} if:
+\begin{itemize}
+    \item \( V_H \subseteq V \), \( V_H \neq \emptyset \)
+    \item \( E_H \subseteq \{ \{u,v\} \in E \mid u,v \in V_H \} \)
+    \item \( H \) is connected
+\end{itemize}
+
+Here, \( H \) is a connected subgraph formed by selecting any non-empty subset of the edges among \( V_H \). Unlike the induced case, not all internal edges are required to be included. This allows for a richer space of meaningful substructures, such as loops missing a bond or partial motifs.
+
+\subsection*{Mathematical Implication}
+
+Given an induced subgraph \( G_2 = (V, E, \tau_V, \tau_E) \), let \( G_1 = (V, E' \subset E, \tau_V, \tau_E|_{E'}) \) be formed by deleting one or more edges while maintaining connectivity.
+
+Then \( G_1 \subseteq G_2 \), and
+\[
+G_2 - G_1 = (\emptyset, \Delta E = E \setminus E', \emptyset, \Delta \tau_E)
+\]
+Such a \( G_1 \) is \emph{excluded} from the induced subgraph model, but \emph{included} in the edge-deletion connected model.
+
+\subsection*{Computational Consequence}
+
+\begin{itemize}
+    \item \textbf{Induced subgraphs} are simpler to enumerate: only vertex subsets are needed, and the edge set is fully determined by the node set.
+    \item \textbf{Edge-deletion subgraphs} require enumeration over both node subsets and all non-empty, connected subsets of the induced edge set.
+    \item Thus, the number of connected subgraphs grows much faster under the edge-deletion model.
+\end{itemize}
+
+\subsection*{Implementation Differences}
+
+\begin{itemize}
+    \item Induced model: For each \( V_H \), construct the induced subgraph using \texttt{G.subgraph(V\_H)} and check connectivity.
+    \item Edge-deletion model: For each \( V_H \), enumerate all edge subsets \( E_H \subseteq E[V_H] \) such that \( (V_H, E_H) \) is connected.
+\end{itemize}
+
+To efficiently generate only connected subgraphs without checking all edge subsets, we implement a recursive DFS-style edge-growing strategy that builds connected subgraphs from individual edges, avoiding disconnected candidates entirely.
+
+\subsection*{Complexity Comparison}
+
+Let \( n = |V| \) and \( m = |E| \).
+
+\begin{itemize}
+    \item \textbf{Induced connected subgraphs:}
+    \[
+    O(2^n)
+    \]
+    since we only consider non-empty vertex subsets and check if the induced subgraph is connected.
+
+    \item \textbf{Edge-deletion connected subgraphs:}
+    \[
+    O(2^n \cdot 2^e) \quad \text{(in worst case, for each vertex subset, all edge subsets)}
+    \]
+    but pruned via connectivity. Using DFS-based generation limits this growth to only viable connected subgraphs.
+
+    \item \textbf{Deduplication:} In both cases, isomorphism or hash-based filtering (e.g., Weisfeiler-Lehman graph hashing) is required to ensure uniqueness.
+\end{itemize}
+
+\subsection*{Summary}
+
+\begin{itemize}
+    \item We use induced subgraphs to generate the list of complexes to significant reduce the computational cost.
+    \item The scaling is still exponential but now only to the number of vertices, not edges.
+\end{itemize}
 
 
 \end{document}
