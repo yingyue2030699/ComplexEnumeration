@@ -46,6 +46,16 @@ def deduplicate_species(species):
             unique_species.append(sp)
     return unique_species
 
+def get_broken_edges(G, part1, part2):
+    """Return edges between part1 and part2, with type attributes."""
+    cut_edges = []
+    for u in part1:
+        for v in G.neighbors(u):
+            if v in part2:
+                edge_type = G[u][v].get("type", None)
+                cut_edges.append((u, v, edge_type))
+    return cut_edges
+
 def compute_reactions_for_species(specie):
     """Compute reactions (split pairs) for a single species."""
     reactions = []
@@ -67,22 +77,6 @@ def compute_all_reactions(species, use_multiprocessing=False):
             reactions.extend(compute_reactions_for_species(specie))
     return reactions
 
-# Sample test graph
-def example_graph():
-    G = nx.Graph()
-    G.add_node(0, type="X")
-    G.add_node(1, type="X")
-    G.add_node(2, type="X")
-    G.add_node(3, type="X")
-
-    G.add_edge(0, 1, type="a")
-    G.add_edge(0, 2, type="b")
-    G.add_edge(0, 3, type="c")
-    G.add_edge(2, 3, type="a")
-    G.add_edge(1, 3, type="b")
-    G.add_edge(1, 2, type="c")
-    return G
-
 # Generate connected subgraphs of G
 def get_unique_fully_connected_subgraphs(G):
     """Naive generation of all connected induced subgraphs."""
@@ -95,21 +89,24 @@ def get_unique_fully_connected_subgraphs(G):
                 connected_subgraphs.append(subG.copy())
     return connected_subgraphs
 
-from example_complex_graph import ExampleGraph
-# Run full pipeline
-G = ExampleGraph.get_5l93()
-t0 = time.time()
-species = get_unique_fully_connected_subgraphs(G)
-t1 = time.time()
-reactions = compute_all_reactions(species, use_multiprocessing=True)
-t2 = time.time()
+if __name__ == "__main__":
+    from example_complex_graph import ExampleGraph
+    # Run full pipeline
+    G = ExampleGraph.get_asymmetry_4mer()
+    t0 = time.time()
+    species = get_unique_fully_connected_subgraphs(G)
+    t1 = time.time()
+    reactions = compute_all_reactions(species, use_multiprocessing=True)
+    t2 = time.time()
 
-import pandas as pd
+    import pandas as pd
+    
+    reaction_df = pd.DataFrame([
+        {"product": list(r[2].nodes), "part1": list(r[0]), "part2": list(r[1]), "bonds_broken": get_broken_edges(r[2], r[0], r[1])}
+        for r in reactions
+    ])
+    
+    t3 = time.time()
 
-reaction_df = pd.DataFrame([
-    {"specie_nodes": list(r[2].nodes), "part1": list(r[0]), "part2": list(r[1])}
-    for r in reactions
-])
-
-print(reaction_df)
-print(t1 - t0, t2 - t1)
+    print(reaction_df)
+    print(t1 - t0, t2 - t1, t3 - t2)
