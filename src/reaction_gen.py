@@ -56,6 +56,36 @@ def get_broken_edges(G, part1, part2):
                 cut_edges.append((u, v, edge_type))
     return cut_edges
 
+def is_single_bond_change(G1, G2):
+    """Check if G1 and G2 differ by exactly one edge (added or removed), not both."""
+    edges1 = set((min(u, v), max(u, v), d['type']) for u, v, d in G1.edges(data=True))
+    edges2 = set((min(u, v), max(u, v), d['type']) for u, v, d in G2.edges(data=True))
+
+    diff1 = edges1 - edges2
+    diff2 = edges2 - edges1
+
+    # Only bond(s) formed or broken, not both
+    return (len(diff1) >= 1 and len(diff2) == 0) or (len(diff1) == 0 and len(diff2) >= 1)
+
+def find_single_bond_transformations(species):
+    """Find pairs of species that differ by exactly one bond (added or removed)."""
+    transformations = []
+    seen = set()
+    n = len(species)
+    for i in range(n):
+        for j in range(i+1, n):
+            G1 = species[i]
+            G2 = species[j]
+            if set(G1.nodes) != set(G2.nodes):  # must be same node set
+                continue
+            if is_single_bond_change(G1, G2):
+                h1, h2 = typed_wl_hash(G1), typed_wl_hash(G2)
+                key = tuple(sorted((h1, h2)))
+                if key not in seen:
+                    seen.add(key)
+                    transformations.append((G1, G2))
+    return transformations
+
 def compute_reactions_for_species(specie):
     """Compute reactions (split pairs) for a single species."""
     reactions = []
@@ -106,7 +136,18 @@ if __name__ == "__main__":
         for r in reactions
     ])
     
+    transformations = find_single_bond_transformations(species)
+    
+    transformations_df = pd.DataFrame([
+    {
+        "monomer_1_nodes": list(t1.nodes),
+        "monomer_2_nodes": list(t2.nodes),
+        "diff": list((set(t1.edges(data="type")) ^ set(t2.edges(data="type"))))
+    }
+    for t1, t2 in transformations])
+        
     t3 = time.time()
 
     print(reaction_df)
+    print(transformations_df)
     print(t1 - t0, t2 - t1, t3 - t2)
