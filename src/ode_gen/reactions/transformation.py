@@ -4,7 +4,7 @@ import networkx as nx
 from collections import defaultdict
 from itertools import combinations
 from networkx.algorithms.isomorphism import GraphMatcher
-from complexes.subcomplexes import get_unique_fully_connected_subgraphs
+from ode_gen.complexes.subcomplexes import get_unique_fully_connected_subgraphs
 
 # Match functions
 # We define that two graphs are isomorphic if there exists some one-on-one mapping

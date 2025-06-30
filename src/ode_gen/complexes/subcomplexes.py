@@ -59,4 +59,5 @@ if __name__ == "__main__":
     G.add_edge(2, 3, type="ca")
     G.add_edge(3, 1, type="ab")
 
+    get_unique_fully_connected_subgraphs(G)
 

@@ -1,0 +1,14 @@
+name: complexenumeration-env   # ← change to your preferred env name
+channels:
+  - defaults
+  - conda-forge
+
+dependencies:
+  - python=3.11
+  - pip
+  - networkx
+  - pandas
+  - numpy
+  - matplotlib       # (optional, if you visualize)
+  - pip:
+      - -e .         # ← installs your local package in editable mode

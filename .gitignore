@@ -51,6 +51,12 @@ coverage.xml
 .pytest_cache/
 cover/
 
+# Ignore everything in benchmarks/...
+benchmarks/*
+
+# ...except Python files
+!benchmarks/**/*.py
+
 # Translations
 *.mo
 *.pot

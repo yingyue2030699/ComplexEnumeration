@@ -4,7 +4,7 @@ import time
 import warnings
 
 # Replace with actual import path
-from complexes.subcomplexes import get_unique_fully_connected_subgraphs
+from ode_gen.complexes.subcomplexes import get_unique_fully_connected_subgraphs
 
 class TestFullyConnectedSubgraphDetection8y7s(unittest.TestCase):
     def setUp(self):
