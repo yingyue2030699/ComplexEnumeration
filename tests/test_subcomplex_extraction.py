@@ -4,7 +4,7 @@ import time
 import warnings
 
 # Replace with actual import path
-from src.molecule_gen import get_unique_fully_connected_subgraphs
+from complexes.subcomplexes import get_unique_fully_connected_subgraphs
 
 class TestFullyConnectedSubgraphDetection8y7s(unittest.TestCase):
     def setUp(self):

@@ -4,9 +4,11 @@ import networkx as nx
 from collections import defaultdict
 from itertools import combinations
 from networkx.algorithms.isomorphism import GraphMatcher
-from molecule_gen import get_unique_fully_connected_subgraphs
+from complexes.subcomplexes import get_unique_fully_connected_subgraphs
 
 # Match functions
+# We define that two graphs are isomorphic if there exists some one-on-one mapping
+# for nodes, edges, node types, and edge types
 def node_match(n1, n2):
     return n1["type"] == n2["type"]
 

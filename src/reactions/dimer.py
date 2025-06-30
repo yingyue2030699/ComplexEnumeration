@@ -93,7 +93,7 @@ def compute_reactions_for_species(specie):
         reactions.append((part1, part2, specie))
     return reactions
 
-def compute_all_reactions(species, use_multiprocessing=False):
+def find_all_dimer_reactions(species, use_multiprocessing=False):
     """Compute all reactions across a list of species with optional multiprocessing."""
     species = deduplicate_species(species)
 
@@ -126,7 +126,7 @@ if __name__ == "__main__":
     t0 = time.time()
     species = get_unique_fully_connected_subgraphs(G)
     t1 = time.time()
-    reactions = compute_all_reactions(species, use_multiprocessing=True)
+    reactions = find_all_dimer_reactions(species, use_multiprocessing=True)
     t2 = time.time()
 
     import pandas as pd
