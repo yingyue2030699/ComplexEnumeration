@@ -52,7 +52,7 @@ class PointGroup:
         self._ref_orientation = np.identity(3)
 
         # determine inertia tensor
-        inertia_tensor = tensors.get_inertia_tensor(self._symbols, self._cent_coord)
+        inertia_tensor = tensors.get_inertia_tensor(self._cent_coord)
         eigenvalues, eigenvectors = np.linalg.eigh(inertia_tensor)
         self._eigenvalues = eigenvalues
         self._eigenvectors = eigenvectors.T
@@ -80,7 +80,7 @@ class PointGroup:
             self._spherical()
 
         else:
-            raise Exception('Group type error')
+            raise ValueError('Group type error')
 
     def _rename_point_group(self, pointgroup):
         """
@@ -187,7 +187,7 @@ class PointGroup:
 
         self._max_order = self._get_axis_rot_order(main_axis, n_max=9)
 
-        self._cyclic(main_axis)
+        self._cyclic(main_axis) 
 
     def _spherical(self):
         """
@@ -241,7 +241,7 @@ class PointGroup:
                         t_axis = np.dot(main_axis, rotation_matrix(p_axis_base, np.pi/2).T)
                         return np.dot(t_axis, rot_matrix.T)
 
-                raise Exception('Error orientation I group')
+                raise ValueError('Error orientation I group')
 
             p_axis = determine_orientation_I(main_axis)
             self._set_orientation(main_axis, p_axis)
@@ -263,7 +263,7 @@ class PointGroup:
                     if self._check_op(c4, tol_factor=utils.magic_formula(4)*np.sqrt(2)):
                         return axis
 
-                raise Exception('Error orientation O group')
+                raise ValueError('Error orientation O group')
 
             p_axis = determine_orientation_O(main_axis)
             self._set_orientation(main_axis, p_axis)
@@ -286,7 +286,7 @@ class PointGroup:
                         t_axis = np.dot(main_axis, rotation_matrix(p_axis_base, np.pi/2).T)
                         return np.dot(t_axis, rot_matrix.T)
 
-                raise Exception('Error orientation T group')
+                raise ValueError('Error orientation T group')
             
             p_axis = determine_orientation_T(main_axis)
             self._set_orientation(main_axis, p_axis)

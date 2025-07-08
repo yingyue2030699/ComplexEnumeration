@@ -243,4 +243,4 @@ def get_non_degenerated(eigenvalues, tolerance=0.1):
         if degenerate_count == 0:
             return i
 
-    raise Exception('Non-degenerate eigenvalue not found')
+    raise RuntimeError("Could not identify a unique non-degenerate eigenvalue based on the provided tolerance.")
